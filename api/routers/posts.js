@@ -19,6 +19,9 @@ router.post("/post", async (req, res) => {
         content,
         authorId: 1,
       },
+      include: {
+        author: true,
+      },
     });
 
     res.status(201).json(newPost);
@@ -29,26 +32,20 @@ router.post("/post", async (req, res) => {
 });
 
 // 最新つぶやき取得用API
-// router.post("/login", async (req, res) => {
-//   const { email, password } = req.body;
-
-//   const user = await prisma.user.findUnique({ where: { email } });
-
-//   if (!user) {
-//     return res.status(401).json({ error: "そのユーザーは存在しません。" });
-//   }
-
-//   const isPasswordValid = await bcrypt.compare(password, user.password);
-
-//   if (!isPasswordValid) {
-//     return res.status(401).json({ error: "そのパスワードは間違っています。" });
-//   }
-
-//   const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, {
-//     expiresIn: "1d",
-//   });
-
-//   return res.json({ token });
-// });
+router.get("/get_latest_post", async (req, res) => {
+  try {
+    const latestPosts = await prisma.post.findMany({
+      take: 10,
+      orderBy: { createdAt: "desc" },
+      include: {
+        author: true,
+      },
+    });
+    return res.json(latestPosts);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "サーバーエラーです。" });
+  }
+});
 
 module.exports = router;
